@@ -117,6 +117,11 @@ public final class PropertyDescriptor implements Comparable<PropertyDescriptor> 
      */
     private final ResourceDefinition resourceDefinition;
 
+    /**
+     * Metadata about the listen port that this property specifies
+     */
+    private final ListenPortDefinition listenPortDefinition;
+
     protected PropertyDescriptor(final Builder builder) {
         this.displayName = builder.displayName == null ? builder.name : builder.displayName;
         this.name = builder.name;
@@ -132,6 +137,7 @@ public final class PropertyDescriptor implements Comparable<PropertyDescriptor> 
         this.validators = List.copyOf(builder.validators);
         this.dependencies = builder.dependencies == null ? Collections.emptySet() : Set.copyOf(builder.dependencies);
         this.resourceDefinition = builder.resourceDefinition;
+        this.listenPortDefinition = builder.listenPortDefinition;
     }
 
     @Override
@@ -217,6 +223,7 @@ public final class PropertyDescriptor implements Comparable<PropertyDescriptor> 
         private boolean dynamicallyModifiesClasspath = false;
         private Class<? extends ControllerService> controllerServiceDefinition;
         private ResourceDefinition resourceDefinition;
+        private ListenPortDefinition listenPortDefinition;
         private List<Validator> validators = new ArrayList<>();
 
         public Builder fromPropertyDescriptor(final PropertyDescriptor specDescriptor) {
@@ -234,6 +241,7 @@ public final class PropertyDescriptor implements Comparable<PropertyDescriptor> 
             this.validators = new ArrayList<>(specDescriptor.validators);
             this.dependencies = new HashSet<>(specDescriptor.dependencies);
             this.resourceDefinition = specDescriptor.resourceDefinition;
+            this.listenPortDefinition = specDescriptor.listenPortDefinition;
             return this;
         }
 
@@ -574,6 +582,30 @@ public final class PropertyDescriptor implements Comparable<PropertyDescriptor> 
             resourceTypes.addAll(Arrays.asList(additionalResourceTypes));
 
             this.resourceDefinition = new StandardResourceDefinition(cardinality, resourceTypes);
+            return this;
+        }
+
+        /**
+         * Specifies that this property defines a numbered host port that a server will bind to and listen for client-initiated connections.
+         * This enables discoverability of Listen Ports when deploying NiFi as part of a system, which can simplify the dynamic creation of external network components that need to facilitate
+         * inbound connections to NiFi, such as gateways, ingress controllers, load balancers, and reverse proxies.
+         * <p>
+         *   See {@link ListenPortDefinition}, {@link ListenPortDefinition.TransportProtocol}, and {@link ListenPortDefinition.ApplicationProtocol}
+         *   for guidance on how to specify protocols.
+         * </p>
+         *
+         * @param transportProtocol     specifies the layer 4 protocol used at the host operating system level for the port specified by this Property.
+         * @param applicationProtocols  optionally specifies one or more layer 7 protocols supported by the NiFi component listening on the port specified by this Property.
+         * @return the builder
+         */
+        public Builder identifiesListenPort(final ListenPortDefinition.TransportProtocol transportProtocol, final String... applicationProtocols) {
+            Objects.requireNonNull(transportProtocol);
+            final Set<String> appProtocols = new HashSet<>();
+            if (applicationProtocols != null) {
+                appProtocols.addAll(Arrays.asList(applicationProtocols));
+            }
+
+            this.listenPortDefinition = new StandardListenPortDefinition(transportProtocol, appProtocols);
             return this;
         }
 
