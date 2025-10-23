@@ -587,12 +587,11 @@ public final class PropertyDescriptor implements Comparable<PropertyDescriptor> 
 
         /**
          * Specifies that this property defines a numbered host port that a server will bind to and listen for client-initiated connections.
+         * <p>
          * This enables discoverability of Listen Ports when deploying NiFi as part of a system, which can simplify the dynamic creation of external network components that need to facilitate
          * inbound connections to NiFi, such as gateways, ingress controllers, load balancers, and reverse proxies.
          * <p>
-         *   See {@link ListenPortDefinition}, {@link ListenPortDefinition.TransportProtocol}, and {@link ListenPortDefinition.ApplicationProtocol}
-         *   for guidance on how to specify protocols.
-         * </p>
+         * See {@link ListenPortDefinition} for guidance on how to specify protocols.
          *
          * @param transportProtocol     specifies the layer 4 protocol used at the host operating system level for the port specified by this Property.
          * @param applicationProtocols  optionally specifies one or more layer 7 protocols supported by the NiFi component listening on the port specified by this Property.

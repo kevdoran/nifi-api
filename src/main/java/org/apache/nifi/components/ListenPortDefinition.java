@@ -37,8 +37,36 @@ public interface ListenPortDefinition {
      *  This is used as a hint for NiFi runtimes and environments to offer richer behavior (such as configuration or validation) for application protocols they understand.
      *  If more than one application protocol could be supported, but is decided at runtime based on configuration, this method should return all possible application protocols.
      *  Inspecting the component with a Listen Port at runtime can determine more details about what has been configured.
-     * </p>
-     *  See {@link ApplicationProtocol} for conventional strings used for common application protocols.
+     * <p>
+     * General guidance for application protocol string values:
+     * <ol>
+     *     <li>
+     *       Use IANA names when possible. For example:
+     *        <p>
+     *        <a href="https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml">
+     *          IANA Service Name and Transport Protocol Port Number Registry
+     *        </a>
+     *        <p>
+     *        <a href="https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids">
+     *          IANA TLS Application-Layer Protocol Negotiation (ALPN) Protocol IDs
+     *        </a>
+     *        <p>
+     *        <a href="https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml">
+     *          IANA Uniform Resource Identifier (URI) Schemes
+     *        </a>
+     *     </li>
+     *     <li>
+     *       Do not include TLS variants of protocols. NiFi Listen Processors generally support TLS when possible, and the SSLContextProvider configuration is enough information to infer if the app
+     *      protocol is using TLS. For example, there is no need to include wss for Websocket over TLS or h2c for HTTP/2 over TCP without TLS.
+     *     </li>
+     *     <li>
+     *       For application protocols built on HTTP, such as gPRC or OTLP, use or include the foundational HTTP protocol(s) in the application protocol list for the ListenPortDefinition.
+     *       Protocols built on HTTP usually are just specifications for structuring data payloads within HTTP requests, but the HTTP request semantics are likely the most important aspect for system
+     *       components that will be discovering NiFi Listen Ports, such as ingress controllers, load balancers, gateways, proxies, etc. Data payload structure is usually only important to a NiFi
+     *      component, not networking components external to NiFi. You may also include application protocol(s) layered atop HTTP that are relevant to the Listen Port, if applicable.
+     *      For example: ["http/1.1", "h2", "grpc", "otlp"]
+     *     </li>
+     * </ol>
      *
      * @return one or more application protocols that could be supported by the processor,
      * or an empty list if no application protocols are known to be supported.
@@ -50,49 +78,7 @@ public interface ListenPortDefinition {
      * Identifies the layer 4 protocol used for the port number at the host operating system level.
      */
     enum TransportProtocol {
-        SCTP,
         TCP,
         UDP
-    }
-
-    /**
-     * String constants provided for conventional use in the ListenPortDefinition applicationProtocols field.
-     *
-     * General guidance when updating this list:
-     *
-     * 1. Use IANA names when possible. For example:
-     *
-     *    IANA Service Name and Transport Protocol Port Number Registry
-     *    https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml
-     *
-     *    IANA TLS Application-Layer Protocol Negotiation (ALPN) Protocol IDs
-     *    https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids
-     *
-     *    IANA Uniform Resource Identifier (URI) Schemes
-     *    https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml
-     *
-     * 2. Do not include TLS variants of protocols. NiFi Listen Processors generally support TLS when possible, and the SSLContextProvider configuration is enough information to infer if the app
-     *    protocol is using TLS. For example, there is no need to include wss for Websocket over TLS or h2c for HTTP/2 over TCP without TLS.
-     *
-     * 3. For application protocols built on HTTP, such as gPRC or OTLP, use or include the foundational HTTP protocol(s) in the application protocol list for the ListenPortDefinition.
-     *    Protocols built on HTTP usually are just specifications for structuring data payloads within HTTP requests, but the HTTP request semantics are likely the most important aspect for system
-     *    components that will be discovering NiFi Listen Ports, such as ingress controllers, load balancers, gateways, proxies, etc. Data payload structure is usually only important to a NiFi
-     *    component, not networking components external to NiFi. You may also include application protocol(s) layered atop HTTP that are relevant to the Listen Port, if applicable.
-     *    For example: ["http/1.1", "h2", "grpc", "otlp"]
-     */
-    final class ApplicationProtocol {
-        public static final String FTP = "ftp";
-        public static final String HTTP_0_9 = "http/0.9";
-        public static final String HTTP_1_0 = "http/1.0";
-        public static final String HTTP_1_1 = "http/1.1";
-        public static final String H2 = "h2";
-        public static final String H3 = "h3";
-        public static final String SYSLOG = "syslog";
-        public static final String SNMP_TRAP = "snmptrap";
-        public static final String WEBSOCKET = "ws";
-
-        private ApplicationProtocol() {
-            throw new UnsupportedOperationException("ApplicationProtocol is a utility class and cannot be instantiated");
-        }
     }
 }
